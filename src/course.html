@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DSA for ML Interviews</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+/* VOICE: a patient tutor who also coaches for interviews; plain verbs, one idea per step.
+   IDEA: a metro map. Each lesson is a line of stations; each technique is its own coloured line.
+   PICTURE: cards that physically move: scanned, halved, squeezed by pointers, framed by a sliding window.
+   COLOUR and TYPE: white ground, red / blue / green lines, amber pointer; Figtree 800 + Figtree.
+   LAYOUT: lesson tabs, live meters, big stage, metro stepper, step text; then code, cues, practice, quiz. */
+:root{color-scheme:light dark;
+--bg:light-dark(#ffffff,#0e1116);--ink:light-dark(#000000,#f3f5f8);--soft:light-dark(#5b6270,#9aa3b2);
+--card:light-dark(#ffffff,#1b212b);--edge:light-dark(#d5d9e0,#323a47);--base:light-dark(#c9ced6,#06080b);
+--panel:light-dark(#f3f5f8,#151a22);
+--red:#e6261f;--blue:#0a5cff;--amber:#ffb400;--green:#00a05a;--sec:var(--red)}
+:root[data-theme=light]{color-scheme:light}:root[data-theme=dark]{color-scheme:dark}
+*{box-sizing:border-box;min-width:0}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 Figtree,system-ui,sans-serif;overflow-x:clip}
+html{scroll-padding-top:16px}
+.wrap{max-width:1080px;margin:0 auto;padding:clamp(18px,3vw,36px) max(4vw,16px) 120px}
+.course{color:var(--soft);font-weight:700;font-size:14px;margin:0 0 10px}
+.tabs{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;margin-bottom:18px}
+.tabs button{flex:none;min-height:44px;padding:0 16px;border-radius:99px;border:1.5px solid var(--edge);background:var(--bg);color:var(--ink);font:600 15px Figtree,sans-serif;cursor:pointer}
+.tabs button[aria-current]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+h1{font:800 clamp(32px,5vw,48px)/1.05 Figtree,sans-serif;margin:0 0 8px;text-wrap:balance;letter-spacing:-.01em}
+.sub{margin:0 0 14px;color:var(--soft);max-width:64ch}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 14px;padding:0;list-style:none}
+.chips li{border:1.5px solid var(--edge);border-radius:99px;padding:3px 12px;font-size:14px;font-weight:600}
+.jump{display:flex;flex-wrap:wrap;gap:6px 16px;margin:0 0 18px;font-size:15px}
+.jump button{background:none;border:0;padding:6px 0;color:var(--ink);font:600 15px Figtree,sans-serif;text-decoration:underline;text-decoration-color:var(--edge);text-underline-offset:4px;cursor:pointer;min-height:36px}
+.meters{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:1px;background:var(--edge);border:1px solid var(--edge);border-radius:14px 14px 0 0;overflow:hidden}
+.meters div{background:var(--panel);padding:10px 14px}
+.meters span{display:block;font-size:13px;color:var(--soft);font-weight:600}
+.meters b{display:block;font-size:clamp(17px,2.4vw,22px);font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.meters .live b{color:var(--sec)}
+.stage{border:1px solid var(--edge);border-top:0;border-radius:0 0 14px 14px}
+.fig{position:relative;height:300px;transition:height .35s}.fig>svg{position:absolute;inset:0;width:100%;height:100%}
+.bar{display:flex;align-items:center;gap:10px;padding:8px 12px;border-top:1px solid var(--edge)}
+.cap{flex:1;font-weight:500;min-height:1.55em;margin:0}
+.icon{flex:none;width:44px;height:44px;border-radius:10px;border:1.5px solid var(--edge);background:var(--card);color:var(--ink);display:grid;place-items:center;cursor:pointer}
+.icon svg{width:18px;height:18px}
+button:focus-visible,input:focus-visible,a:focus-visible,summary:focus-visible{outline:3px solid var(--amber);outline-offset:2px}
+.metro{margin:24px 0 8px}
+.lines{display:grid;gap:0;font-size:14px;font-weight:700;margin-bottom:6px}
+.lines span{padding-left:4px}
+.stations{display:grid;list-style:none;margin:0;padding:0}
+.stations li{position:relative;display:grid;place-items:center;height:48px}
+.stations li::before{content:"";position:absolute;left:0;right:0;top:50%;height:8px;margin-top:-4px;background:var(--c)}
+.stations li:first-child::before{left:50%}.stations li:last-child::before{right:50%}
+.stations button{position:relative;width:36px;height:36px;border-radius:50%;border:4px solid var(--c);background:var(--bg);color:var(--ink);font:800 14px Figtree,sans-serif;cursor:pointer;padding:0}
+.stations button.done{background:var(--c);color:#fff}
+.stations button[aria-current]{transform:scale(1.22);background:var(--ink);color:var(--bg)}
+.step{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:28px;margin-top:18px}
+.tag{display:inline-block;background:var(--sec);color:#fff;font-weight:700;font-size:14px;border-radius:6px;padding:2px 10px}
+h2{font:800 clamp(24px,3.4vw,32px)/1.1 Figtree,sans-serif;margin:10px 0 10px;text-wrap:balance}
+.step p,.part>p{margin:0 0 12px;max-width:68ch}
+.key{border-left:6px solid var(--sec);background:var(--panel);border-radius:0 12px 12px 0;padding:14px 18px;align-self:start}
+.key h3{margin:0 0 4px;font-size:16px}.key p{margin:0}
+code{font:600 15px/1.4 ui-monospace,Menlo,monospace;background:var(--panel);padding:1px 5px;border-radius:5px;overflow-wrap:anywhere}
+.part{margin-top:56px;padding-top:28px;border-top:2px solid var(--edge)}
+.codebox{position:relative;background:var(--panel);border-radius:12px;border:1px solid var(--edge)}
+.codebox pre{margin:0;padding:18px 18px 18px;overflow-x:auto;font:500 14px/1.6 ui-monospace,Menlo,monospace}
+.codebox pre code{background:none;padding:0;font:inherit;overflow-wrap:normal}
+.copy{position:absolute;top:10px;right:10px;min-height:40px;padding:0 14px;border-radius:9px;border:1.5px solid var(--edge);background:var(--bg);color:var(--ink);font:700 14px Figtree,sans-serif;cursor:pointer}
+table{border-collapse:collapse;width:100%;margin:8px 0 4px;font-size:15px}
+th,td{text-align:left;padding:10px;border-bottom:1px solid var(--edge);vertical-align:top}
+th{font-weight:700}
+.probs{list-style:none;margin:0;padding:0;display:grid;gap:12px}
+.probs li{border:1.5px solid var(--edge);border-radius:12px;padding:14px 16px}
+.probs .t{display:flex;flex-wrap:wrap;gap:6px 12px;align-items:baseline}
+.probs a{color:var(--ink);font-weight:700;font-size:17px}
+.diff{font-size:13px;font-weight:700;border-radius:6px;padding:1px 8px;color:#fff}
+.Easy{background:var(--green)}.Medium{background:#b36b00}
+.probs p{margin:4px 0 6px;color:var(--soft)}
+details{margin-top:4px}summary{cursor:pointer;font-weight:600;min-height:32px;padding:4px 0}
+details p{color:var(--ink)!important;margin:2px 0 6px 18px!important}
+fieldset{border:1.5px solid var(--edge);border-radius:12px;padding:12px 16px 14px;margin:0 0 12px}
+legend{font-weight:700;padding:0 6px;font-size:17px}
+.opt{display:flex;gap:10px;align-items:flex-start;padding:8px 6px;border-radius:8px;cursor:pointer}
+.opt:hover{background:var(--panel)}.opt input{width:20px;height:20px;margin:2px 0 0;flex:none;accent-color:var(--sec)}
+.fb{margin:8px 0 0;font-weight:500}.fb b{color:var(--green)}.fb.no b{color:var(--red)}
+.score{font-weight:700}
+.try{background:var(--panel);border-radius:12px;padding:14px 16px;margin:8px 0 16px}
+.try form{display:flex;gap:8px;flex-wrap:wrap}
+.try input{font:500 16px Figtree,sans-serif;padding:10px 12px;border-radius:10px;border:1.5px solid var(--edge);background:var(--bg);color:var(--ink);flex:1 1 160px;min-height:44px}
+.btn{font:700 16px Figtree,sans-serif;min-height:44px;padding:0 18px;border-radius:10px;border:0;background:var(--ink);color:var(--bg);cursor:pointer}
+.res{margin-top:12px;display:grid;gap:8px}
+.row{display:grid;grid-template-columns:8.5em minmax(0,1fr) 3.5em;gap:10px;align-items:center;font-size:15px}
+.row i{display:block;height:14px;border-radius:7px;background:var(--rc);width:0;transition:width .5s}
+.row b{text-align:right;white-space:nowrap}
+.msg{margin:8px 0 0;font-weight:600}.err{color:var(--red)}
+.sr{position:absolute;left:-9999px}
+.track{margin:28px 0 0}.track h2{font-size:24px}
+.track ol{margin:0;padding:0;list-style:none;border-left:8px solid var(--c);margin-left:10px}
+.track li{position:relative;padding:8px 0 8px 26px}
+.track li::before{content:"";position:absolute;left:-17px;top:14px;width:18px;height:18px;border-radius:50%;background:var(--bg);border:4px solid var(--c)}
+.track li.ready::before{background:var(--c)}
+.track li b{font-weight:700}.track li span{color:var(--soft);font-size:15px}
+.st{font-size:13px;font-weight:700;margin-left:6px;padding:1px 8px;border-radius:6px;background:var(--panel);color:var(--ink)!important}
+.st.r{background:var(--ink);color:var(--bg)!important}
+.nav{position:fixed;left:0;right:0;bottom:0;background:color-mix(in srgb,var(--bg) 92%,transparent);backdrop-filter:blur(8px);border-top:1px solid var(--edge)}
+.nav div{max-width:1080px;margin:0 auto;padding:10px max(4vw,16px);display:flex;gap:10px}
+.nav button{min-height:48px;border-radius:12px;font:700 16px Figtree,sans-serif;cursor:pointer;padding:0 18px}
+#back{background:var(--bg);color:var(--ink);border:1.5px solid var(--edge)}
+#next{flex:1;background:var(--sec);color:#fff;border:0;text-align:left;display:flex;justify-content:space-between;align-items:center;gap:8px}
+#back:disabled{opacity:.4;cursor:default}
+[hidden]{display:none!important}
+.cell{transition:transform .55s cubic-bezier(.3,.7,.2,1),opacity .35s}
+.init .cell{transition:none}
+.cell .b{fill:var(--base)}.cell .f{fill:var(--card);stroke:var(--edge);stroke-width:1.5}
+.cell text{fill:var(--ink);font:600 15px Figtree,sans-serif;text-anchor:middle;dominant-baseline:central}
+.cell.check .f{fill:var(--amber);stroke:#b37e00}.cell.check text{fill:#000}
+.cell.miss{opacity:.42}.cell.miss .f{stroke:var(--red);stroke-dasharray:4 3}
+.cell.out{opacity:.16}
+.cell.found .f{fill:var(--sec);stroke:var(--sec)}.cell.found text{fill:#fff}
+.cell.new .f{stroke:var(--sec);stroke-width:3}
+.cell.gone{opacity:0;pointer-events:none}
+.lbl{fill:var(--soft);font:500 13px Figtree,sans-serif;text-anchor:middle}
+.chip{fill:var(--ink)}.chipt{fill:var(--bg);font:700 15px Figtree,sans-serif;text-anchor:middle;dominant-baseline:central}
+.ptr{fill:var(--amber)}.ptrt{fill:#000;font:800 14px Figtree,sans-serif;text-anchor:middle;dominant-baseline:central}
+@media(prefers-reduced-motion:reduce){.cell,.row i,.fig{transition:none}}
+@media(max-width:760px){.step{grid-template-columns:minmax(0,1fr)}.meters{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:600px){.meters b{white-space:normal;font-size:17px}.lines{font-size:13px}.stations button{width:28px;height:28px;border-width:3px;font-size:13px}.row{grid-template-columns:7em minmax(0,1fr) 3em}table{font-size:14px}th,td{padding:8px 6px}#next span:first-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.stack thead{display:none}.stack tr{display:grid;padding-block:10px;border-bottom:1px solid var(--edge)}.stack td{display:flow-root;border:0;padding:3px 0;padding-inline-start:8em;text-align:start}.stack td::before{content:attr(data-l);float:inline-start;width:7.5em;margin-inline-start:-8em;white-space:normal;font-weight:700}.stack td:empty{display:none}}
+</style>
+<script>new MutationObserver(()=>{for(const c of document.querySelectorAll('.stack td:not([data-l])')){let i=0,p=c;while(p=p.previousElementSibling)i+=p.colSpan;c.dataset.l=c.closest('table').rows[0].cells[i]?.textContent||''}}).observe(document,{childList:true,subtree:true})</script>
+</head>
+<body>
+<div class="wrap">
+  <p class="course">Data structures and algorithms for ML interviews</p>
+  <div class="tabs" id="tabs" role="navigation" aria-label="Lessons"></div>
+
+  <div id="lessonView">
+    <h1 id="lt"></h1>
+    <p class="sub" id="ls"></p>
+    <ul class="chips" id="lc"></ul>
+    <div class="jump" id="jump">
+      <button type="button" data-to="walk">Walkthrough</button><button type="button" data-to="code">Code template</button><button type="button" data-to="cues">Spot the pattern</button><button type="button" data-to="practice">Practice problems</button><button type="button" data-to="quiz">Quiz</button>
+    </div>
+    <section id="walk" aria-label="Walkthrough">
+      <div class="meters" id="meters"></div>
+      <div class="stage">
+        <div class="fig" id="fig"><svg id="svg" role="img" aria-label="Animated diagram of the data structure"><g id="under"></g><g id="cells"></g><g id="over"></g></svg></div>
+        <div class="bar">
+          <p class="cap" id="cap" aria-live="polite"></p>
+          <button class="icon" id="replay" type="button" aria-label="Replay this step"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M4 12a8 8 0 1 0 2.4-5.7"/><path d="M4 4v4h4"/></svg></button>
+          <button class="icon" id="pause" type="button" aria-label="Pause"><svg viewBox="0 0 24 24" fill="currentColor" id="pauseIcon"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg></button>
+        </div>
+      </div>
+      <nav class="metro" aria-label="Lesson steps"><div class="lines" id="lines"></div><ol class="stations" id="stations"></ol></nav>
+      <article class="step" id="step"></article>
+    </section>
+    <section class="part" id="code"><h2>Code template</h2><p>Tested Python for every pattern in this lesson. Type it out from memory once before you start the practice problems.</p><div class="codebox"><button class="copy" id="copy" type="button">Copy</button><pre><code id="codeText"></code></pre></div></section>
+    <section class="part" id="cues"><h2>Spot the pattern</h2><p>Interviews never name the technique. These are the phrases that give it away.</p><table class="stack"><thead><tr><th>When the problem says</th><th>Reach for</th></tr></thead><tbody id="cueRows"></tbody></table></section>
+    <section class="part" id="practice"><h2>Practice problems</h2><p>Solve these on LeetCode in order. Give each one 25 minutes, say the brute force and its Big-O out loud first, and open a hint only when you're stuck.</p><ol class="probs" id="probs"></ol></section>
+    <section class="part" id="quiz"><h2>Check yourself</h2><div id="qz"></div><p class="score" id="score" aria-live="polite"></p></section>
+  </div>
+
+  <div id="roadView" hidden>
+    <h1>The course roadmap</h1>
+    <p class="sub">Built for ML engineer, data scientist and ML research engineer interviews. Their coding rounds are mostly easy-to-medium DSA, plus an ML coding round that standard DSA courses skip. Lessons are added in this order.</p>
+    <div id="tracks"></div>
+    <p class="sub" style="margin-top:28px">Not in this course yet: probability and statistics, ML theory, and ML system design. Those are separate interview rounds.</p>
+  </div>
+</div>
+<div class="nav" id="nav"><div>
+  <button id="back" type="button">Back</button>
+  <button id="next" type="button"><span id="nextLabel">Next</span><span aria-hidden="true">›</span></button>
+</div></div>
+
+<script>
+{
+const CODE={l1:%%CODE1%%,l2:%%CODE2%%};
+const COL={a:"var(--red)",b:"var(--blue)",c:"var(--green)"};
+const reduce=matchMedia("(prefers-reduced-motion: reduce)").matches;
+const fmt=n=>n.toLocaleString("en-US");
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+
+/* ================= Lesson 1: hashing and search ================= */
+const U=["kai","zoe","ravi","ben","priya","leo","sam","nora","theo","ivy","ana","maya","jules","eli","fern","quinn"];
+const S=[...U].sort(),N=U.length,M=7;
+const hb=s=>[...s].reduce((a,c)=>a+c.charCodeAt(0),0)%M;
+const B=Array.from({length:M},()=>[]);U.forEach(n=>B[hb(n)].push(n));
+const longest=B.reduce((a,b)=>b.length>a.length?b:a);
+function linear(t){
+  const f=[{mode:"arr",order:U,marks:{},chip:`Looking for ${t}`,comps:0,cap:`Looking for ${t}. Start at slot 0.`}];
+  for(let i=0;i<N;i++){const m={};for(let j=0;j<i;j++)m[U[j]]="miss";const hit=U[i]===t;m[U[i]]=hit?"found":"check";
+    f.push({mode:"arr",order:U,marks:m,chip:`Looking for ${t}`,comps:i+1,cap:hit?`Slot ${i}: ${U[i]} matches. Found after ${i+1} comparisons.`:`Slot ${i}: ${U[i]} isn't ${t}.`});if(hit)return f}
+  const m={};U.forEach(n=>m[n]="miss");
+  f.push({mode:"arr",order:U,marks:m,chip:`Looking for ${t}`,comps:N,cap:`All ${N} slots checked: ${t} isn't here. ${N} comparisons to be sure.`});return f}
+function binary(t){
+  const f=[],out=(l,h)=>{const m={};S.forEach((n,i)=>{if(i<l||i>h)m[n]="out"});return m};let lo=0,hi=N-1,c=0;
+  f.push({mode:"arr",order:S,marks:{},chip:`Looking for ${t}`,comps:0,range:[lo,hi],cap:`Looking for ${t} in ${N} sorted slots.`});
+  while(lo<=hi){const mid=(lo+hi)>>1,v=S[mid],m=out(lo,hi);c++;
+    if(v===t){m[v]="found";f.push({mode:"arr",order:S,marks:m,chip:`Looking for ${t}`,comps:c,range:[lo,hi],mid,cap:`Middle of slots ${lo}–${hi} is slot ${mid}: ${v}. Found in ${c} comparisons.`});return f}
+    m[v]="check";const after=t>v;
+    f.push({mode:"arr",order:S,marks:m,chip:`Looking for ${t}`,comps:c,range:[lo,hi],mid,cap:`Middle of slots ${lo}–${hi} is slot ${mid}: ${v}. ${t} comes ${after?"after":"before"} it, so drop the ${after?"left":"right"} side.`});
+    if(after)lo=mid+1;else hi=mid-1}
+  const m={};S.forEach(n=>m[n]="out");
+  f.push({mode:"arr",order:S,marks:m,chip:`Looking for ${t}`,comps:c,cap:`Nothing left to check: ${t} isn't here. ${c} comparisons.`});return f}
+function insertFrames(n){
+  const p=S.findIndex(x=>x>n),order=[...S,null],f=[];let k=0;
+  f.push({mode:"arr",order:[...order],marks:{},chip:`Inserting ${n}`,shifts:0,cap:`${n} belongs in slot ${p}, between ${S[p-1]} and ${S[p]}.`});
+  for(let i=N-1;i>=p;i--){order[i+1]=order[i];order[i]=null;k++;f.push({mode:"arr",order:[...order],marks:{[order[i+1]]:"check"},chip:`Inserting ${n}`,shifts:k,cap:`Shift ${order[i+1]} right to slot ${i+1}.`})}
+  order[p]=n;f.push({mode:"arr",order:[...order],marks:{[n]:"new"},chip:`Inserting ${n}`,shifts:k,cap:`${n} goes into slot ${p}. ${k} names had to move.`});return f}
+const calc=t=>{const cs=[...t].map(c=>c.charCodeAt(0)),s=cs.reduce((a,b)=>a+b,0);return `${cs.join(" + ")} = ${s}; ${s} mod ${M} = ${s%M}`};
+function hashFrames(t){
+  const b=hb(t),ch=B[b],f=[];
+  f.push({mode:"hash",marks:{},chip:`Looking for ${t}`,comps:0,cap:`Looking for ${t}. First, compute its bucket.`});
+  f.push({mode:"hash",marks:{},chip:`Looking for ${t}`,comps:0,bucket:b,cap:`Letter codes of ${t}: ${calc(t)}. Go straight to bucket ${b}.`});
+  for(let i=0;i<ch.length;i++){const m={};ch.slice(0,i).forEach(x=>m[x]="miss");const hit=ch[i]===t;m[ch[i]]=hit?"found":"check";
+    f.push({mode:"hash",marks:m,chip:`Looking for ${t}`,comps:i+1,bucket:b,cap:hit?`${ch[i]} matches. ${i+1} comparison${i?"s":""}, and the other ${M-1} buckets were never touched.`:`Bucket ${b}, entry ${i+1}: ${ch[i]} isn't ${t}.`});if(hit)return f}
+  const m={};ch.forEach(x=>m[x]="miss");
+  f.push({mode:"hash",marks:m,chip:`Looking for ${t}`,comps:ch.length,bucket:b,cap:ch.length?`Bucket ${b} has no ${t}: it's free. ${ch.length} comparison${ch.length>1?"s":""}.`:`Bucket ${b} is empty: ${t} is free with 0 comparisons.`});return f}
+const lin=t=>linear(t).at(-1).comps,bin=t=>binary(t).at(-1).comps,hsh=t=>hashFrames(t).at(-1).comps;
+const mayaSlot=U.indexOf("maya"),lenaP=S.findIndex(x=>x>"lena");
+
+const L1={id:"l1",tab:"Lesson 1: Hashing and search",title:"Finding things fast",
+ sub:"One question, “is this username taken?”, answered three ways. Watch the cards move and count how much work each structure does.",
+ chips:["Beginner","10 steps","About 12 minutes","5 practice problems"],
+ lines:[["Scan the array","a",3],["Sort and halve","b",4],["Hash it","c",3]],
+ items:[...U,"lena"].map(n=>({id:n,label:n})),
+ meters:(st,s)=>{const m=st.m;let c=m.c??(s.comps==null?"—":fmt(s.comps));if(s.shifts!==undefined)c="—";
+   return [["Comparisons",c,1],["Growth",m.g],["At 1M names",m.a],["Insert cost",s.shifts!==undefined?`${s.shifts} move${s.shifts===1?"":"s"}`:m.i,1]]},
+ steps:[
+ {sec:"a",tag:"Problem",short:"The question",title:"Is this username taken?",
+  body:`<p>Your app has ${N} accounts. Every sign-up has to check whether the new name already exists. With ${N} names, any method is instant.</p><p>At a million accounts, how you <em>store</em> the names decides whether that check takes microseconds or makes people wait. This lesson counts one thing: how many names we have to look at.</p>`,
+  key:["What we measure","Comparisons: each time we look at a stored name and ask “is this the one?”"],m:{g:"—",a:"—",i:"—"},
+  fr:()=>[{mode:"arr",order:U,marks:{},comps:null,cap:`${N} names in an array, in the order people signed up.`}]},
+ {sec:"a",tag:"Try it",short:"Scan every slot",title:"Check every slot, left to right",
+  body:`<p>The simplest structure is an <strong>array</strong>: names sit in numbered slots in sign-up order. To find <code>maya</code>, start at slot 0 and compare until you hit her.</p><p>She's in slot ${mayaSlot}, so it takes ${mayaSlot+1} comparisons. The work grows in step with the number of names.</p>`,
+  key:["Linear search","Look at items one by one. Simple, needs no setup, works on any order."],m:{g:"O(n)",a:"up to 1,000,000",i:"O(1) append"},fr:()=>linear("maya")},
+ {sec:"a",tag:"Worst case",short:"A missing name",title:"The worst case: a name that isn't there",
+  body:`<p>To prove <code>omar</code> is free, the scan has to rule out every slot: ${N} comparisons. With a million accounts, that's a million comparisons on every sign-up.</p><p><strong>Big-O</strong> describes how the worst case grows as n grows. Linear search is <strong>O(n)</strong>: double the names, double the work.</p>`,
+  key:["Why the worst case","A “not found” answer is the common case for sign-ups, and it's the slowest one for a scan."],m:{g:"O(n)",a:"1,000,000",i:"O(1) append"},fr:()=>linear("omar")},
+ {sec:"b",tag:"Idea",short:"Sort first",title:"Put the names in order first",
+  body:`<p>Sorting costs work up front: a good algorithm such as merge sort needs about <strong>n log₂ n</strong> comparisons, roughly ${N} × 4 = ${N*4} here.</p><p>You pay that once. Afterwards, the order itself is information that every search can use.</p>`,
+  key:["Trade setup for speed","Spending work once to make every later question cheaper is the core move in data structures."],m:{c:`≈${N*4} once`,g:"O(n log n)",a:"≈20 million, once",i:"—"},
+  fr:()=>[{mode:"arr",order:U,marks:{},comps:null,cap:"Sign-up order: no pattern to use."},{mode:"arr",order:S,marks:{},comps:null,cap:"Alphabetical order: every slot now tells you which way to go.",dur:1200}]},
+ {sec:"b",tag:"Try it",short:"Binary search",title:"Open in the middle, throw away half",
+  body:`<p><strong>Binary search</strong> checks the middle slot. If <code>maya</code> comes after that name alphabetically, she can't be anywhere on the left, so the whole left half is discarded. Repeat on what's left.</p><p>It finds her in ${bin("maya")} comparisons instead of ${lin("maya")}.</p>`,
+  key:["Binary search","Only works on sorted data. Each comparison removes about half of what remains."],m:{g:"O(log n)",a:"at most 20",i:"—"},fr:()=>binary("maya")},
+ {sec:"b",tag:"Insight",short:"Why log n",title:"Halving beats counting",
+  body:`<p>Search for <code>omar</code> again. Each comparison cuts the range roughly in half, and after ${bin("omar")} comparisons nothing is left: he's free.</p><p>Doubling the data adds just <strong>one</strong> comparison. ${N} names need at most 5; a million need at most 20; a billion, at most 30. That's <strong>O(log n)</strong>.</p>`,
+  key:["The rule of thumb","log₂ n asks: how many times can you halve n before you reach 1?"],m:{g:"O(log n)",a:"at most 20",i:"—"},fr:()=>binary("omar")},
+ {sec:"b",tag:"Trade-off",short:"The catch",title:"The catch: keeping it sorted",
+  body:`<p><code>lena</code> signs up. She belongs in slot ${lenaP}, so every name after her has to shift one slot right first: ${N-lenaP} moves here, up to n in general.</p><p>Inserting into a sorted array is <strong>O(n)</strong>. That's fine when reads far outnumber writes, and painful when names arrive constantly.</p>`,
+  key:["No free lunch","Sorted arrays make lookups fast by making inserts slow."],m:{c:"—",g:"O(n) insert",a:"up to 1,000,000 moves",i:"O(n)"},fr:()=>insertFrames("lena")},
+ {sec:"c",tag:"Idea",short:"Hash it",title:"Compute where the name lives",
+  body:`<p>A <strong>hash table</strong> turns the name itself into a bucket number. Our toy hash adds up the letter codes and keeps the remainder after dividing by ${M}, the number of buckets.</p><p>Looking up <code>maya</code> means computing her bucket (${hb("maya")}), jumping straight to it, and comparing only what's inside. The other buckets are never opened. Python's <code>set</code> and <code>dict</code> work this way.</p>`,
+  key:["Hash table","Lookup cost stops depending on how many names you have, only on how full each bucket is."],m:{g:"O(1) average",a:"about 1",i:"O(1) average"},fr:()=>hashFrames("maya")},
+ {sec:"c",tag:"Problem",short:"Collisions",title:"When names land in the same bucket",
+  body:`<p>Different names can hash to the same bucket: a <strong>collision</strong>. Bucket ${hb(longest.at(-1))} holds ${longest.length}: ${longest.join(", ")}. Each bucket keeps a short list, so finding <code>${longest.at(-1)}</code> takes ${longest.length} comparisons.</p><p>Here ${N} names share ${M} buckets, about ${(N/M).toFixed(1)} per bucket. Real hash tables mix the letters far better than a plain sum (ours sends anagrams like <code>leo</code> and <code>ole</code> to the same bucket), and they add buckets as they fill, keeping lists around one entry. That's why lookup and insert average <strong>O(1)</strong>.</p>`,
+  key:["Load factor","Items ÷ buckets. Keep it low and collisions stay rare; let it climb and a hash table slides toward a scan."],m:{g:"O(1) average",a:"about 1",i:"O(1) average"},fr:()=>hashFrames(longest.at(-1))},
+ {sec:"c",tag:"Choose",short:"Pick one",title:"Pick the structure for the question",
+  body:`<div class="try"><form id="tryf" novalidate><label for="tn" class="sr">Name to look up</label><input id="tn" value="maya" autocomplete="off" spellcheck="false" aria-describedby="tmsg"><button class="btn" type="submit">Look it up</button></form><div class="res" id="res"></div><p class="msg" id="tmsg"></p></div>
+  <table class="stack"><thead><tr><th>Structure</th><th>Lookup</th><th>Insert</th><th>Keeps order?</th></tr></thead><tbody>
+  <tr><td>Unsorted array</td><td>O(n)</td><td>O(1) at the end</td><td>Sign-up order only</td></tr>
+  <tr><td>Sorted array</td><td>O(log n)</td><td>O(n)</td><td>Yes: ranges, “next name after…”</td></tr>
+  <tr><td>Hash table</td><td>O(1) average, O(n) worst</td><td>O(1) average</td><td>No</td></tr></tbody></table>`,
+  key:["How to choose","“Does it exist?” wants a hash table. “What comes next?” or “everything from A to F” wants sorted order. Tiny or rarely searched data: just scan."],m:{g:"O(1) average",a:"about 1",i:"O(1) average"},fr:()=>hashFrames("maya"),
+  init:ctx=>{const run=()=>{const v=$("tn").value.trim().toLowerCase(),msg=$("tmsg");
+    if(!/^[a-z]{1,12}$/.test(v)){msg.className="msg err";msg.textContent="Use letters a–z only, up to 12 of them.";return}
+    const r=[["Scan","var(--red)",lin(v)],["Binary search","var(--blue)",bin(v)],["Hash table","var(--green)",hsh(v)]];
+    bars(r,N);msg.className="msg";msg.textContent=`${v} is ${U.includes(v)?"taken":"free"}. Comparisons out of ${N} stored names; the hash table used bucket ${hb(v)}.`;ctx.run(hashFrames(v))};
+    $("tryf").addEventListener("submit",e=>{e.preventDefault();run()});run()}}
+ ],
+ code:CODE.l1,
+ cues:[["“Contains a duplicate”, “seen before”, “how many times does each appear”","A <code>set</code>, or a <code>dict</code> / <code>Counter</code>"],
+  ["“Find two items that sum to / match / complement each other”","One pass with a dict of value → index"],
+  ["The input is sorted, or “first position”, “insert position”, “closest value”","Binary search (<code>bisect</code>)"],
+  ["Group items that are “the same” under some rule (anagrams, same digits)","Dict keyed by a normalised form"],
+  ["You need order or ranges (“all names from d to f”)","A sorted list, not a hash table"]],
+ practice:[
+  {n:217,slug:"contains-duplicate",t:"Contains Duplicate",d:"Easy",why:"The sign-up check, exactly.",h:["You only need to know whether a value has appeared before.","Add each number to a set; if it's already in the set, return True. O(n) time, O(n) space."]},
+  {n:1,slug:"two-sum",t:"Two Sum",d:"Easy",why:"The most-asked interview question. Hash map of complements.",h:["For each x, the partner you need is target − x.","Walk the list once, storing value → index in a dict. Before storing x, check whether target − x is already there."]},
+  {n:704,slug:"binary-search",t:"Binary Search",d:"Easy",why:"Write the template from memory, with no off-by-one bugs.",h:["Use the template: lo, hi = 0, len − 1 and loop while lo <= hi.","Always move past mid (mid + 1 or mid − 1) so the range shrinks every round."]},
+  {n:35,slug:"search-insert-position",t:"Search Insert Position",d:"Easy",why:"What binary search tells you when the target is missing.",h:["When the loop ends without a match, look at where lo is.","lo is the first index whose value is ≥ target: return it. This is what bisect_left computes."]},
+  {n:49,slug:"group-anagrams",t:"Group Anagrams",d:"Medium",why:"Choosing a good dict key.",h:["Anagrams share something you can use as a key.","Use tuple(sorted(word)), or a tuple of 26 letter counts, as the key; map it to a list of words."]}],
+ quiz:[
+  {q:"Your sign-up form checks 50 million usernames. You only need to know whether a name exists. What should store them?",o:["An unsorted list","A sorted list with binary search","A hash set","A linked list"],a:2,w:"A hash set answers “does it exist?” in O(1) on average. A sorted list would take about 26 comparisons per check and slow every insert."},
+  {q:"What is the most comparisons binary search needs on a sorted list of 1,024 items?",o:["10","11","32","512"],a:1,w:"Halving 1,024 down to 1 takes 10 rounds, then one last check: ⌊log₂ n⌋ + 1 = 11."},
+  {q:"You need every user whose name falls between “d” and “f”. Which structure helps most?",o:["Hash set","Sorted list","Unsorted list","They're all equally good"],a:1,w:"A hash table scatters names with no order. A sorted list lets you binary-search to “d” and read forward until “f”."},
+  {q:"In Python, what are the typical costs of x in my_list and x in my_set?",o:["Both O(1)","O(n) and O(1) on average","O(log n) and O(1)","Both O(n)"],a:1,w:"in on a list scans it. in on a set hashes x and checks one bucket. Swapping a list for a set is a classic interview optimisation."}]
+};
+
+/* ================= Lesson 2: two pointers and sliding window ================= */
+const P=[2,3,5,8,11,13,17,19,23,29],PT=30,RD=[4,2,7,1,8,3,6,5,9,2],K=4,STR="abcbdeaf";
+const pid=i=>"p"+i,rid=i=>"r"+i,sid=i=>"s"+i;
+const Pord=P.map((_,i)=>pid(i)),Rord=RD.map((_,i)=>rid(i));
+function bruteFrames(){
+  const f=[{mode:"arr",order:Pord,marks:{},chip:`Two prices that sum to ${PT}`,ops:0,cap:"Check every pair: the first price with each one after it, then the second, and so on."}];let ops=0;
+  for(let i=0;i<P.length;i++)for(let j=i+1;j<P.length;j++){ops++;const s=P[i]+P[j],hit=s===PT;
+    f.push({mode:"arr",order:Pord,marks:{[pid(i)]:hit?"found":"check",[pid(j)]:hit?"found":"check"},ptrs:[{i,t:"i"},{i:j,t:"j"}],chip:`Two prices that sum to ${PT}`,ops,ans:hit?`${P[i]} + ${P[j]}`:null,dur:hit?0:130,
+      cap:hit?`${P[i]} + ${P[j]} = ${PT}. Found after checking ${ops} pairs.`:`${P[i]} + ${P[j]} = ${s}.`});if(hit)return f}
+  return f}
+function tpFrames(explain){
+  const f=[],n=P.length;let lo=0,hi=n-1,ops=0;
+  const out=()=>{const m={};P.forEach((_,i)=>{if(i<lo||i>hi)m[pid(i)]="out"});return m};
+  f.push({mode:"arr",order:Pord,marks:{},ptrs:[{i:lo,t:"L"},{i:hi,t:"R"}],chip:`Two prices that sum to ${PT}`,ops:0,cap:"L starts at the cheapest price, R at the most expensive."});
+  while(lo<hi){ops++;const s=P[lo]+P[hi],m=out(),hit=s===PT;m[pid(lo)]=m[pid(hi)]=hit?"found":"check";
+    let cap;
+    if(hit)cap=`${P[lo]} + ${P[hi]} = ${PT}. Found with ${ops} checks.`;
+    else if(s>PT)cap=explain?`${P[lo]} + ${P[hi]} = ${s}, over ${PT}. ${P[hi]} is too big even with the cheapest price left, so no pair can use it: drop it and move R left.`:`${P[lo]} + ${P[hi]} = ${s}, over ${PT}: move R left.`;
+    else cap=explain?`${P[lo]} + ${P[hi]} = ${s}, under ${PT}. ${P[lo]} is too small even with the most expensive price left, so no pair can use it: drop it and move L right.`:`${P[lo]} + ${P[hi]} = ${s}, under ${PT}: move L right.`;
+    f.push({mode:"arr",order:Pord,marks:m,ptrs:[{i:lo,t:"L"},{i:hi,t:"R"}],chip:`Two prices that sum to ${PT}`,ops,ans:hit?`${P[lo]} + ${P[hi]}`:null,cap,dur:explain?2600:1000});
+    if(hit)return f;if(s>PT)hi--;else lo++}
+  return f}
+const winSum=i=>RD.slice(i,i+K).reduce((a,b)=>a+b,0);
+let bestI=0;for(let i=0;i+K<=RD.length;i++)if(winSum(i)>winSum(bestI))bestI=i;
+const bestFrame=(ops,how)=>{const m={};for(let j=bestI;j<bestI+K;j++)m[rid(j)]="found";
+  return {mode:"arr",order:Rord,marks:m,range:[bestI,bestI+K-1],chip:`Best ${K}-day total`,ops,ans:`${winSum(bestI)}`,cap:`Best stretch: days ${bestI}–${bestI+K-1}, total ${winSum(bestI)}. ${ops} ${how}.`}};
+function fixedBrute(){
+  const f=[{mode:"arr",order:Rord,marks:{},chip:`Best ${K}-day total`,ops:0,cap:`Ten days of readings. Which ${K} days in a row add up to the most?`}];let ops=0,best=-Infinity;
+  for(let i=0;i+K<=RD.length;i++){ops+=K;const s=winSum(i);best=Math.max(best,s);
+    f.push({mode:"arr",order:Rord,marks:{},range:[i,i+K-1],chip:`Best ${K}-day total`,ops,ans:`${best}`,dur:900,cap:`Days ${i}–${i+K-1}: ${RD.slice(i,i+K).join(" + ")} = ${s}. That's ${K} more additions.`})}
+  f.push(bestFrame(ops,"additions in total"));return f}
+function fixedSlide(){
+  let s=winSum(0),ops=K,best=s;
+  const f=[{mode:"arr",order:Rord,marks:{},range:[0,K-1],chip:`Best ${K}-day total`,ops,ans:`${best}`,dur:1200,cap:`First window: ${RD.slice(0,K).join(" + ")} = ${s}. ${K} additions, once.`}];
+  for(let r=K;r<RD.length;r++){const prev=s;s+=RD[r]-RD[r-K];ops+=2;best=Math.max(best,s);
+    f.push({mode:"arr",order:Rord,marks:{[rid(r)]:"check",[rid(r-K)]:"miss"},range:[r-K+1,r],chip:`Best ${K}-day total`,ops,ans:`${best}`,dur:1100,cap:`Slide right: add ${RD[r]}, drop ${RD[r-K]}. ${prev} → ${s}.`})}
+  f.push(bestFrame(ops,"operations in total"));return f}
+function varFrames(str,pre){
+  const id=i=>pre+i,ord=[...str].map((_,i)=>id(i)),f=[],last={};let L=0,best=0,br=null,ops=0;
+  const chip="Longest run with no repeated letter";
+  f.push({mode:"arr",order:ord,marks:{},chip,ops:0,ans:"0",cap:`Find the longest stretch of “${str}” with no letter repeated.`});
+  for(let r=0;r<str.length;r++){const ch=str[r];ops++;
+    if(ch in last&&last[ch]>=L){
+      f.push({mode:"arr",order:ord,marks:{[id(last[ch])]:"miss",[id(r)]:"check"},range:[L,r],ptrs:[{i:L,t:"L"},{i:r,t:"R"}],chip,ops,ans:`${best}`,dur:1500,cap:`${ch} is already in the window at slot ${last[ch]}: L jumps to slot ${last[ch]+1}.`});
+      ops+=last[ch]+1-L;L=last[ch]+1}
+    last[ch]=r;const len=r-L+1,nb=len>best;if(nb){best=len;br=[L,r]}
+    f.push({mode:"arr",order:ord,marks:{},range:[L,r],ptrs:[{i:L,t:"L"},{i:r,t:"R"}],chip,ops,ans:`${best}`,dur:900,cap:`Window “${str.slice(L,r+1)}” has no repeats: length ${len}${nb?", the best so far":""}.`})}
+  const m={};if(br)for(let j=br[0];j<=br[1];j++)m[id(j)]="found";
+  f.push({mode:"arr",order:ord,marks:m,range:br,chip,ops,ans:`${best}`,cap:br?`Longest: “${str.slice(br[0],br[1]+1)}”, length ${best}. ${ops} pointer moves for ${str.length} letters.`:"Nothing to scan."});return f}
+const bruteOps=bruteFrames().at(-1).ops,tpOps=tpFrames(false).at(-1).ops,nPairs=P.length*(P.length-1)/2;
+const nWin=RD.length-K+1,fbOps=nWin*K,fsOps=K+2*(RD.length-K),vf=varFrames(STR,"s").at(-1);
+
+const L2={id:"l2",tab:"Lesson 2: Two pointers and windows",title:"Two pointers and sliding windows",
+ sub:"Turn “check every pair” into a single pass. Two pointers squeeze a sorted list from both ends; a window slides across a run of neighbours.",
+ chips:["Beginner to intermediate","8 steps","About 12 minutes","6 practice problems"],
+ lines:[["Two pointers","a",4],["Fixed window","b",2],["Variable window","c",2]],
+ items:[...P.map((v,i)=>({id:pid(i),label:v})),...RD.map((v,i)=>({id:rid(i),label:v})),...[...STR].map((c,i)=>({id:sid(i),label:c}))],
+ meters:(st,s)=>[["Operations",s.ops==null?"—":fmt(s.ops),1],["Growth",st.m.g],["At 1M items",st.m.a],[st.m.al||"Answer",s.ans??"—",1]],
+ steps:[
+ {sec:"a",tag:"Problem",short:"The question",title:"Two prices that hit the budget",
+  body:`<p>A shop lists ${P.length} prices, already sorted from cheapest to most expensive. A customer has exactly ${PT} to spend on two items. Which two prices add up to ${PT}?</p><p>This is Two Sum on a <em>sorted</em> list, and the sorting is the clue that unlocks a faster method.</p>`,
+  key:["What we measure","Operations: each pair we add up and check against the budget."],m:{g:"—",a:"—",al:"Pair"},
+  fr:()=>[{mode:"arr",order:Pord,marks:{},chip:`Two prices that sum to ${PT}`,ops:null,cap:`${P.length} prices, sorted from cheapest to most expensive.`}]},
+ {sec:"a",tag:"Brute force",short:"Every pair",title:"Try every pair",
+  body:`<p>Two nested loops: pair the first price with every price after it, then the second, and so on. There are ${nPairs} pairs here, and this order reaches the answer after ${bruteOps} checks.</p><p>Pairs grow as n²/2: a million prices means about 500 billion pairs. That's <strong>O(n²)</strong>.</p>`,
+  key:["Interview habit","Say the brute force and its Big-O out loud first. It shows you understand the problem, and it's the baseline you'll improve on."],m:{g:"O(n²)",a:"≈500 billion pairs",al:"Pair"},fr:bruteFrames},
+ {sec:"a",tag:"Try it",short:"Two pointers",title:"Squeeze from both ends",
+  body:`<p>Put <strong>L</strong> on the cheapest price and <strong>R</strong> on the most expensive. If the sum is too big, the only way to shrink it is to move R left. If it's too small, move L right.</p><p>The pointers meet in the middle, finding the pair in ${tpOps} checks instead of ${bruteOps}.</p>`,
+  key:["Two pointers","Two indexes that move toward each other, or in the same direction, so each element is visited once."],m:{g:"O(n)",a:"at most 1 million",al:"Pair"},fr:()=>tpFrames(false)},
+ {sec:"a",tag:"Insight",short:"Why it works",title:"Each move rules out a whole price",
+  body:`<p>When ${P[0]} + ${P.at(-1)} is over budget, ${P.at(-1)} is too big even paired with the cheapest price left, so it can't be in <em>any</em> remaining pair. One check eliminates one price forever.</p><p>That's why at most n − 1 checks are needed, and why the list must be sorted: without order, a too-big sum tells you nothing about which side to move.</p>`,
+  key:["Spot it","Sorted input plus a question about pairs (sum, difference, closest) means two pointers."],m:{g:"O(n)",a:"at most 1 million",al:"Pair"},fr:()=>tpFrames(true)},
+ {sec:"b",tag:"Problem",short:"Best stretch",title:`The best ${K}-day stretch`,
+  body:`<p>Ten days of readings. Which ${K} consecutive days have the highest total? The direct way recomputes every window from scratch: ${nWin} windows × ${K} additions = ${fbOps}.</p><p>That's <strong>O(n·k)</strong>. With a million readings and a 1,000-day window, it's about a billion additions.</p>`,
+  key:["Contiguous","“Consecutive”, “in a row”, “substring”, “subarray”: neighbours, not any combination."],m:{g:"O(n·k)",a:"≈1 billion (k = 1,000)",al:"Best total"},fr:fixedBrute},
+ {sec:"b",tag:"Try it",short:"Slide it",title:"Slide: add one, drop one",
+  body:`<p>Neighbouring windows share ${K-1} of their ${K} days. So don't recompute: when the window moves right, <strong>add</strong> the day entering and <strong>subtract</strong> the day leaving.</p><p>That's ${fsOps} operations instead of ${fbOps}, and the cost no longer depends on the window size. <strong>O(n)</strong> whatever k is.</p>`,
+  key:["Fixed window","Keep a running total; update it in O(1) per move."],m:{g:"O(n)",a:"≈2 million",al:"Best total"},fr:fixedSlide},
+ {sec:"c",tag:"Try it",short:"Grow and shrink",title:"A window that grows and shrinks",
+  body:`<p>Now the window has no fixed size: find the longest stretch of “${STR}” with no repeated letter. <strong>R</strong> moves right to grow the window. When the new letter is already inside, <strong>L</strong> jumps just past its earlier copy.</p><p>Both pointers only move forward, so the total work is at most 2n moves: ${vf.ops} here for ${STR.length} letters. The answer is ${vf.ans}.</p>`,
+  key:["Variable window","Grow with R until the window breaks the rule, then shrink with L until it's valid again. Track the best size as you go."],m:{g:"O(n)",a:"at most 2 million moves",al:"Longest"},fr:()=>varFrames(STR,"s")},
+ {sec:"c",tag:"Your turn",short:"Your turn",title:"Run the window on any text",
+  body:`<div class="try"><form id="tryf" novalidate><label for="tn" class="sr">Letters to scan</label><input id="tn" value="pwwkew" autocomplete="off" spellcheck="false" maxlength="12" aria-describedby="tmsg"><button class="btn" type="submit">Run the window</button></form><p class="msg" id="tmsg"></p></div>
+  <p>Try a word with no repeats, then one with many. Watch L: it never moves backwards, which is what keeps the whole scan O(n).</p>`,
+  key:["Which window?","Size given (“k days”, “length k”): fixed window. “Longest” or “shortest” with a rule: variable window."],m:{g:"O(n)",a:"at most 2 million moves",al:"Longest"},fr:()=>varFrames("pwwkew","t"),
+  init:ctx=>{const run=()=>{const v=$("tn").value.trim().toLowerCase(),msg=$("tmsg");
+    if(!/^[a-z]{1,12}$/.test(v)){msg.className="msg err";msg.textContent="Use letters a–z only, up to 12 of them.";return}
+    ctx.cells([...v].map((c,i)=>({id:"t"+i,label:c})));const fr=varFrames(v,"t");
+    msg.className="msg";msg.textContent=`Longest run without a repeat: ${fr.at(-1).ans} letters, in ${fr.at(-1).ops} pointer moves.`;ctx.run(fr)};
+    $("tryf").addEventListener("submit",e=>{e.preventDefault();run()});run()}}
+ ],
+ code:CODE.l2,
+ cues:[["Sorted array, find a pair (or triple) with a target sum or difference","Two pointers from both ends"],
+  ["“Palindrome”, “reverse in place”, compare the two ends","Two pointers from both ends"],
+  ["“Remove duplicates in place”, “move zeros”, partition the array","Two pointers in the same direction (slow and fast)"],
+  ["“Subarray / substring of length k”, “k consecutive days”","Fixed sliding window"],
+  ["“Longest / shortest substring or subarray such that…”","Variable sliding window"],
+  ["Subarray sums when numbers can be negative","Not a window: shrinking no longer helps. Prefix sums with a hash map (Lesson 3)."]],
+ practice:[
+  {n:125,slug:"valid-palindrome",t:"Valid Palindrome",d:"Easy",why:"Pointers from both ends, warm-up.",h:["Compare the first and last characters, then move both inward.","Skip characters that aren't letters or digits with inner while loops; compare in lowercase."]},
+  {n:167,slug:"two-sum-ii-input-array-is-sorted",t:"Two Sum II: Input Array Is Sorted",d:"Medium",why:"The lesson's pair search, exactly.",h:["Sorted input and a pair with a target sum: which template?","Use pair_with_sum. The answer is 1-indexed, so add 1 to both indexes."]},
+  {n:11,slug:"container-with-most-water",t:"Container With Most Water",d:"Medium",why:"Two pointers where the move rule needs an argument.",h:["Area = width × the shorter of the two lines.","Always move the pointer at the shorter line. Moving the taller one can only shrink the width without raising the limit."]},
+  {n:643,slug:"maximum-average-subarray-i",t:"Maximum Average Subarray I",d:"Easy",why:"Fixed window, exactly.",h:["The best average comes from the best total of k neighbours.","Use max_window_sum, then divide by k."]},
+  {n:3,slug:"longest-substring-without-repeating-characters",t:"Longest Substring Without Repeating Characters",d:"Medium",why:"The classic variable window. Asked constantly.",h:["Keep the last index where each character appeared.","When the current character was last seen at or after L, move L to that index + 1. Update best every step."]},
+  {n:209,slug:"minimum-size-subarray-sum",t:"Minimum Size Subarray Sum",d:"Medium",why:"Variable window that shrinks for the shortest answer.",h:["All numbers are positive, so a bigger window always has a bigger sum.","Grow R adding to the sum; while sum ≥ target, record the length, subtract a[L] and move L right."]}],
+ quiz:[
+  {q:"Find the longest subarray whose sum is at most k. All numbers are positive. Which technique fits?",o:["Two pointers from both ends","Variable sliding window","Binary search","Sort the array first"],a:1,w:"Contiguous plus “longest such that…” is a variable window. Positive numbers guarantee that shrinking from the left always lowers the sum."},
+  {q:"Two pointers from both ends finds a pair with a target sum only when…",o:["The array has no duplicates","The array is sorted","The array is short","The target is positive"],a:1,w:"Order is what makes “too big, move R left” safe. On unsorted data use a hash map instead (Lesson 1's Two Sum)."},
+  {q:"A fixed window of size k slides over n numbers. Roughly how many operations?",o:["n × k","n²","About 2n, whatever k is","k²"],a:2,w:"k additions for the first window, then one add and one subtract per move: k + 2(n − k), which is O(n)."},
+  {q:"The variable window has a loop that moves L inside the loop over R. Why is it still O(n), not O(n²)?",o:["Python optimises it","L and R only move forward, at most n times each","The window is always small","It isn't: it's O(n²)"],a:1,w:"Count moves, not loops: R moves n times in total and L moves at most n times in total, so the work is at most 2n."}]
+};
+
+const LESSONS=[L1,L2];
+const TRACKS=[
+ {name:"Track 1: Core DSA, the coding round",c:"var(--red)",items:[
+  ["Hashing and search","Arrays, binary search, hash maps, Big-O","r","l1"],["Two pointers and sliding window","Pairs in sorted data, contiguous runs","r","l2"],
+  ["Prefix sums and intervals","Range sums, subarray-sum-equals-k, merging intervals","n"],["Stacks, queues and the monotonic stack","Brackets, next greater element"],
+  ["Linked lists","Reversal, fast and slow pointers"],["Trees: DFS and BFS","Traversals, depth, level order, binary search trees"],
+  ["Heaps and top-k","Priority queues, k largest, merging sorted streams"],["Graphs","BFS on grids, topological sort, union-find"],
+  ["Recursion and backtracking","Subsets, permutations, combinations"],["Dynamic programming essentials","1D and 2D tables: coin change, edit distance"]]},
+ {name:"Track 2: The ML coding round",c:"var(--blue)",items:[
+  ["NumPy and vectorisation","Broadcasting, replacing Python loops"],["Regression from scratch","Linear and logistic regression with gradient descent"],
+  ["k-means and k-nearest neighbours from scratch","Distances, assignment and update steps"],["Evaluation and sampling","Precision, recall, ROC AUC, reservoir and weighted sampling"],
+  ["PyTorch essentials","A training loop and attention from scratch, for research engineer roles"]]},
+ {name:"Track 3: Data wrangling",c:"var(--green)",items:[["SQL","Joins, GROUP BY, window functions"],["pandas","groupby, merge, reshaping"]]}];
+
+/* ================= engine ================= */
+const $=id=>document.getElementById(id);
+const svg=$("svg"),gc=$("cells"),gu=$("under"),go=$("over"),NS="http://www.w3.org/2000/svg";
+let L=L1,cur=0,frames=[],fi=0,timer=null,paused=false,lastState=null,cells={};
+function makeCells(items){for(const it of items){if(cells[it.id]){cells[it.id].querySelector("text").textContent=it.label;continue}
+  const g=document.createElementNS(NS,"g");g.setAttribute("class","cell gone");g.innerHTML='<rect class="b" rx="9"/><rect class="f" rx="9"/><text></text>';g.querySelector("text").textContent=it.label;gc.appendChild(g);cells[it.id]=g}}
+function size(g,w,h){const[b,f]=g.querySelectorAll("rect");b.setAttribute("width",w);b.setAttribute("height",h);b.setAttribute("y",4);f.setAttribute("width",w);f.setAttribute("height",h);const t=g.querySelector("text");t.setAttribute("x",w/2);t.setAttribute("y",h/2)}
+function place(id,x,y,w,h,st){const g=cells[id];if(!g)return;size(g,w,h);g.style.transform=`translate(${x}px,${y}px)`;g.setAttribute("class","cell "+(st||"idle"))}
+function chip(text,W){const w=Math.min(W-32,text.length*8.4+36);return `<rect class="chip" x="${(W-w)/2}" y="14" width="${w}" height="34" rx="17"/><text class="chipt" x="${W/2}" y="31">${esc(text)}</text>`}
+function draw(s){
+  lastState=s;const W=svg.clientWidth;if(!W)return;const fig=$("fig"),sec=COL[L.steps[cur].sec];let H,under="",over="";
+  for(const id in cells)cells[id].classList.add("gone");
+  if(s.chip)over+=chip(s.chip,W);
+  if(s.mode==="arr"){
+    const n=s.order.length,pt=!!s.ptrs,cols=W>=680?n:W>=430?Math.ceil(n/2):Math.ceil(n/3),rows=Math.ceil(n/cols);
+    const gap=6,cw=Math.min(n<=10?84:72,(W-32-(cols-1)*gap)/cols),ch=46,rh=ch+34+(pt?30:0);
+    const x0=(W-(cols*cw+(cols-1)*gap))/2,y0=pt||s.mid!==undefined?100:68;
+    H=y0+rows*rh-(pt?30:0)+16;fig.style.height=H+"px";
+    const pos=i=>[x0+(i%cols)*(cw+gap),y0+Math.floor(i/cols)*rh];
+    if(s.range)for(let i=s.range[0];i<=s.range[1];i++){const[x,y]=pos(i);under+=`<rect x="${x-3}" y="${y-3}" width="${cw+6}" height="${ch+10}" rx="11" fill="${sec}" opacity=".16"/>`}
+    s.order.forEach((id,i)=>{const[x,y]=pos(i);under+=`<text class="lbl" x="${x+cw/2}" y="${y+ch+22}">${i}</text>`;
+      if(!id)under+=`<rect x="${x}" y="${y}" width="${cw}" height="${ch}" rx="9" fill="none" stroke="var(--edge)" stroke-width="1.5" stroke-dasharray="4 4"/>`;else place(id,x,y,cw,ch,s.marks[id])});
+    if(s.mid!==undefined){const[x,y]=pos(s.mid);over+=`<path d="M${x+cw/2-9} ${y-16}h18l-9 11z" class="ptr"/>`}
+    if(pt){const by={};s.ptrs.forEach(p=>(by[p.i]=by[p.i]||[]).push(p.t));
+      for(const i in by){const[x,y]=pos(+i),t=by[i].join(" "),w=Math.max(26,t.length*10+14);
+        over+=`<rect class="ptr" x="${x+cw/2-w/2}" y="${y-36}" width="${w}" height="24" rx="7"/><path d="M${x+cw/2-6} ${y-12}h12l-6 7z" class="ptr"/><text class="ptrt" x="${x+cw/2}" y="${y-24}">${t}</text>`}}
+  }else{
+    const cols=W>=560?M:4,rows=Math.ceil(M/cols),gap=8,bw=Math.min(110,(W-32-(cols-1)*gap)/cols);
+    const top=64,maxLen=Math.max(...B.map(b=>b.length)),ch=W>=560?42:32,rowH=36+maxLen*(ch+6)+18,x0=(W-(cols*bw+(cols-1)*gap))/2;
+    H=top+rows*rowH+4;fig.style.height=H+"px";
+    B.forEach((list,b)=>{const x=x0+(b%cols)*(bw+gap),y=top+Math.floor(b/cols)*rowH,hot=s.bucket===b;
+      under+=`<rect x="${x}" y="${y}" width="${bw}" height="${rowH-10}" rx="12" fill="${hot?sec:"var(--panel)"}" fill-opacity="${hot?.16:1}" stroke="${hot?sec:"var(--edge)"}" stroke-width="${hot?3:1.5}"/><text class="lbl" x="${x+bw/2}" y="${y+20}" style="font-weight:700;fill:${hot?"var(--ink)":"var(--soft)"}">bucket ${b}</text>`;
+      list.forEach((nm,i)=>place(nm,x+6,y+30+i*(ch+6),bw-12,ch,s.marks[nm]))})}
+  gu.innerHTML=under;go.innerHTML=over}
+const ro=new ResizeObserver(()=>lastState&&draw(lastState));ro.observe(svg);
+
+function meters(s){$("meters").innerHTML=L.meters(L.steps[cur],s).map(([l,v,live])=>`<div${live?' class="live"':""}><span>${l}</span><b>${esc(v)}</b></div>`).join("")}
+function show(i){fi=i;const s=frames[i];draw(s);meters(s);$("cap").textContent=s.cap}
+function tick(){clearTimeout(timer);if(paused||fi>=frames.length-1)return;timer=setTimeout(()=>{show(fi+1);tick()},frames[fi].dur||900)}
+function start(){clearTimeout(timer);if(reduce){show(frames.length-1);return}show(0);timer=setTimeout(tick,500)}
+function setPaused(p){paused=p;$("pause").setAttribute("aria-label",p?"Play":"Pause");
+  $("pauseIcon").innerHTML=p?'<path d="M7 5l12 7-12 7z"/>':'<rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/>';if(p)clearTimeout(timer);else tick()}
+function bars(r,max){$("res").innerHTML=r.map(([n,c,k])=>`<div class="row" style="--rc:${c}"><span>${n}</span><i data-w="${k/max*100}"></i><b>${k}</b></div>`).join("");
+  requestAnimationFrame(()=>document.querySelectorAll("#res i").forEach(e=>e.style.width=Math.max(2,+e.dataset.w)+"%"))}
+const ctx={run:f=>{frames=f;start()},cells:makeCells};
+
+function setHash(h){if(location.hash!=="#"+h)history.replaceState(null,"","#"+h)}
+function goStep(i){
+  cur=Math.max(0,Math.min(L.steps.length-1,i));const s=L.steps[cur];
+  document.documentElement.style.setProperty("--sec",COL[s.sec]);
+  $("step").innerHTML=`<div><span class="tag">Step ${cur+1} of ${L.steps.length}: ${s.tag}</span><h2>${s.title}</h2>${s.body}</div><aside class="key"><h3>${s.key[0]}</h3><p>${s.key[1]}</p></aside>`;
+  document.querySelectorAll("#stations button").forEach((b,j)=>{b.classList.toggle("done",j<cur);if(j===cur)b.setAttribute("aria-current","step");else b.removeAttribute("aria-current")});
+  $("back").disabled=cur===0;$("nextLabel").textContent=cur<L.steps.length-1?`Next: ${L.steps[cur+1].short}`:"Next: the code template";
+  setHash(`${L.id}-step-${cur+1}`);frames=s.fr();start();if(s.init)s.init(ctx)}
+function openLesson(les,step){
+  L=les;clearTimeout(timer);gc.innerHTML="";cells={};makeCells(L.items);
+  $("lessonView").hidden=false;$("roadView").hidden=true;$("nav").hidden=false;
+  $("lt").textContent=L.title;$("ls").textContent=L.sub;$("lc").innerHTML=L.chips.map(c=>`<li>${c}</li>`).join("");
+  const total=L.steps.length;
+  $("lines").style.gridTemplateColumns=L.lines.map(l=>`${l[2]}fr`).join(" ");
+  $("lines").innerHTML=L.lines.map(l=>`<span style="color:${COL[l[1]]}">${l[0]}</span>`).join("");
+  $("stations").style.gridTemplateColumns=`repeat(${total},minmax(0,1fr))`;
+  $("stations").innerHTML=L.steps.map((s,i)=>`<li style="--c:${COL[s.sec]}"><button type="button" data-i="${i}" aria-label="Step ${i+1}: ${esc(s.short)}">${i+1}</button></li>`).join("");
+  $("codeText").textContent=L.code;$("copy").textContent="Copy";
+  $("cueRows").innerHTML=L.cues.map(c=>`<tr><td>${c[0]}</td><td>${c[1]}</td></tr>`).join("");
+  $("probs").innerHTML=L.practice.map(p=>`<li><div class="t"><a href="https://leetcode.com/problems/${p.slug}/" target="_blank" rel="noopener">${p.n}. ${p.t}</a><span class="diff ${p.d}">${p.d}</span></div><p>${p.why}</p>${p.h.map((h,i)=>`<details><summary>Hint ${i+1}</summary><p>${h}</p></details>`).join("")}</li>`).join("");
+  $("qz").innerHTML=L.quiz.map((q,qi)=>`<fieldset><legend>${qi+1}. ${q.q}</legend>${q.o.map((o,oi)=>`<label class="opt"><input type="radio" name="q${qi}" value="${oi}"><span>${o}</span></label>`).join("")}<p class="fb" id="fb${qi}" aria-live="polite"></p></fieldset>`).join("");
+  $("score").textContent="";
+  document.querySelectorAll("#tabs button").forEach(b=>b.dataset.l===L.id?b.setAttribute("aria-current","page"):b.removeAttribute("aria-current"));
+  document.title=L.title;
+  svg.classList.add("init");goStep(step||0);setTimeout(()=>svg.classList.remove("init"),120)}
+function openRoad(){
+  clearTimeout(timer);$("lessonView").hidden=true;$("roadView").hidden=false;$("nav").hidden=true;setHash("roadmap");document.title="Course roadmap";
+  document.querySelectorAll("#tabs button").forEach(b=>b.dataset.l==="road"?b.setAttribute("aria-current","page"):b.removeAttribute("aria-current"));
+  let k=0;$("tracks").innerHTML=TRACKS.map(t=>`<section class="track" style="--c:${t.c}"><h2>${t.name}</h2><ol>${t.items.map(([n,d,st,lid])=>{k++;return `<li class="${st==="r"?"ready":""}"><b>${k}. ${n}</b>${st==="r"?`<span class="st r">Ready</span>`:st==="n"?`<span class="st">Next up</span>`:""}<br><span>${d}</span>${lid?` <button type="button" class="btn" style="min-height:36px;padding:0 12px;font-size:14px;margin-left:6px" data-open="${lid}">Open</button>`:""}</li>`}).join("")}</ol></section>`).join("")}
+
+$("tabs").innerHTML=LESSONS.map(l=>`<button type="button" data-l="${l.id}">${l.tab}</button>`).join("")+`<button type="button" data-l="road">Roadmap</button>`;
+$("tabs").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;b.dataset.l==="road"?openRoad():openLesson(LESSONS.find(l=>l.id===b.dataset.l));scrollTo({top:0})});
+$("tracks").addEventListener("click",e=>{const b=e.target.closest("[data-open]");if(b){openLesson(LESSONS.find(l=>l.id===b.dataset.open));scrollTo({top:0})}});
+$("stations").addEventListener("click",e=>{const b=e.target.closest("button");if(b)goStep(+b.dataset.i)});
+$("jump").addEventListener("click",e=>{const b=e.target.closest("button");if(b)$(b.dataset.to).scrollIntoView({behavior:reduce?"auto":"smooth"})});
+$("back").addEventListener("click",()=>{goStep(cur-1);$("walk").scrollIntoView({behavior:reduce?"auto":"smooth"})});
+$("next").addEventListener("click",()=>{if(cur<L.steps.length-1){goStep(cur+1);$("walk").scrollIntoView({behavior:reduce?"auto":"smooth"})}else $("code").scrollIntoView({behavior:reduce?"auto":"smooth"})});
+$("replay").addEventListener("click",()=>{if(paused)setPaused(false);start()});
+$("pause").addEventListener("click",()=>setPaused(!paused));
+$("copy").addEventListener("click",()=>{const b=$("copy");navigator.clipboard.writeText(L.code).then(()=>{b.textContent="Copied"},()=>{const r=document.createRange();r.selectNodeContents($("codeText"));const sel=getSelection();sel.removeAllRanges();sel.addRange(r);b.textContent="Selected: press Ctrl+C"})});
+$("qz").addEventListener("change",e=>{const inp=e.target;if(inp.type!=="radio")return;const qi=+inp.name.slice(1),q=L.quiz[qi],ok=+inp.value===q.a,fb=$("fb"+qi);
+  fb.className="fb"+(ok?"":" no");fb.innerHTML=ok?`<b>Correct.</b> ${q.w}`:`<b>Not quite.</b> The answer is “${q.o[q.a]}”. ${q.w}`;fb.dataset.done="1";if(!fb.dataset.first)fb.dataset.first=ok?"1":"0";
+  const done=[...document.querySelectorAll("#qz .fb")].filter(f=>f.dataset.done);if(done.length===L.quiz.length)$("score").textContent=`You got ${done.filter(f=>f.dataset.first==="1").length} of ${L.quiz.length} on the first try. Change an answer to see the explanation for the others.`});
+addEventListener("keydown",e=>{if($("lessonView").hidden||e.target.closest("input,textarea,summary"))return;if(e.key==="ArrowRight"&&cur<L.steps.length-1)$("next").click();if(e.key==="ArrowLeft"&&cur>0)$("back").click()});
+function route(){const h=location.hash.slice(1);if(h==="roadmap")return openRoad();const m=/^(l\d+)(?:-step-(\d+))?$/.exec(h);const les=m&&LESSONS.find(l=>l.id===m[1]);
+  if(!les)return openLesson(L1,0);if(les!==L||$("lessonView").hidden)openLesson(les,m[2]?+m[2]-1:0);else if(m[2]&&+m[2]-1!==cur)goStep(+m[2]-1)}
+addEventListener("hashchange",route);route();
+}
+</script>
+</body>
+</html>
